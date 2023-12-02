@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"flag"
+	"fmt"
+	"os"
+)
 
 var (
 	url = "https://jsonmock.hackerrank.com/api/medical_records"
@@ -8,21 +12,36 @@ var (
 
 func main() {
 	client := Client{URL: url}
+	var mode = flag.Int("mode", 1, "0 for sync or 1 for async")
 
-	// sync
-	// records, err := client.Fetch()
-	// if err != nil {
-	// 	fmt.Printf("error: %v\n", err)
-	// 	os.Exit(1)
-	// }
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [options]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 
-	// for _, record := range records {
-	// 	fmt.Printf("record: %v\n", record)
-	// }
+	flag.Parse()
 
-	// async
+	if *mode == 0 {
+		fmt.Printf("************* SYNC MODE *************")
+		records, err := client.Fetch()
+		if err != nil {
+			fmt.Printf("%v\n", err)
+			os.Exit(1)
+		}
+
+		for _, record := range records {
+			for _, data := range record.Data {
+				fmt.Printf("data: %v\n", data)
+			}
+		}
+		return
+	}
+
+	fmt.Printf("************* ASYNC MODE *************")
 	channel := client.FetchAsync()
 	for record := range channel {
-		fmt.Printf("record: %v\n", record.Data)
+		for _, data := range record.Data {
+			fmt.Printf("data: %v\n", data)
+		}
 	}
 }
